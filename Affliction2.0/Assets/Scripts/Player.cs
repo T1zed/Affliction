@@ -8,7 +8,10 @@ public class Player : MonoBehaviour
     private InputAction moveAction;
     private InputAction dashAction;
     private InputAction jumpAction;
-
+    private InputAction AttackAction;
+    private InputAction SecondaryAttackAction;
+    [Header("direction")]
+    public bool right;
     [Header("Movement")]
     public float moveSpeed = 5f;
     public float jumpForce = 5f;
@@ -33,7 +36,7 @@ public class Player : MonoBehaviour
     private bool isWallSliding = false;
     [SerializeField] private float wallSlideDelay = 2f;
     [SerializeField] private float wallSlideSpeed = 2f;
-
+    private AttackComponent attackComponent;
     private Rigidbody2D rb;
     private Vector2 moveInput;
 
@@ -46,6 +49,8 @@ public class Player : MonoBehaviour
     {
 
         rb = GetComponent<Rigidbody2D>();
+        attackComponent = GetComponent<AttackComponent>();
+
     }
 
     private void OnEnable()
@@ -54,9 +59,13 @@ public class Player : MonoBehaviour
         moveAction = playerAction.Player.Move;
         dashAction = playerAction.Player.Dash;
         jumpAction = playerAction.Player.Jump;
+        AttackAction=playerAction.Player.Attack;
+        SecondaryAttackAction=playerAction.Player.SecondaryAttack;
 
         jumpAction.performed += OnJump;
         dashAction.performed += OnDash;
+        AttackAction.performed += OnAttack;
+        SecondaryAttackAction.performed += OnSecondaryAttack;
     }
 
     private void OnDisable()
@@ -64,12 +73,24 @@ public class Player : MonoBehaviour
         playerAction.Player.Disable();
         jumpAction.performed -= OnJump;
         dashAction.performed -= OnDash;
+        AttackAction.performed -= OnAttack;
+        SecondaryAttackAction.performed -= OnSecondaryAttack;
     }
 
     void Update()
     {
         moveInput = moveAction.ReadValue<Vector2>();
-        Debug.Log(IsGrounded());
+
+        if (moveInput.x > 0)
+        {
+            right = true;
+            transform.localScale = new Vector3(1f, transform.localScale.y, transform.localScale.z);
+        }
+        else if (moveInput.x < 0)
+        {
+            right = false;
+            transform.localScale = new Vector3(-1f, transform.localScale.y, transform.localScale.z);
+        }
     }
 
     void FixedUpdate()
@@ -96,7 +117,6 @@ public class Player : MonoBehaviour
 
     private bool IsTouchingWall(out Vector2 wallNormal)
     {
-
         RaycastHit2D hitRight = Physics2D.Raycast(transform.position, Vector2.right, wallCheckDistance, wallLayer);
         if (hitRight.collider != null)
         {
@@ -123,11 +143,17 @@ public class Player : MonoBehaviour
     private void OnJump(InputAction.CallbackContext ctx)
     {
         if (!IsGrounded()) return;
-
-     
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
-  
         rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+    }
+    public void OnAttack(InputAction.CallbackContext ctx)
+    {
+        attackComponent?.RegisterInput(0);
+    }
+
+    public void OnSecondaryAttack(InputAction.CallbackContext ctx)
+    {
+        attackComponent?.RegisterInput(1);
     }
     IEnumerator DashCoroutine()
     {
@@ -135,16 +161,11 @@ public class Player : MonoBehaviour
 
         Vector2 input = moveInput.normalized;
 
-        Vector2 dir = input != Vector2.zero
-            ? input
-            : new Vector2(transform.localScale.x > 0 ? 1f : -1f, 0f);
+        Vector2 dir = input != Vector2.zero ? input : new Vector2(right ? 1f : -1f, 0f); 
 
-   
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-    
         rb.gravityScale = 0f;
-         rb.linearVelocity  = dir * dashSpeed;
-
+        rb.linearVelocity  = dir * dashSpeed;
         float timer = 0f;
         while (timer < dashDuration)
         {
@@ -154,8 +175,7 @@ public class Player : MonoBehaviour
             timer += Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate();
         }
-
-         rb.linearVelocity  = Vector2.zero;
+        rb.linearVelocity  = Vector2.zero;
         rb.gravityScale = 1f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
         isDashing = false;

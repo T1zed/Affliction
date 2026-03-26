@@ -34,9 +34,18 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Impulse",
+                    "name": "Attack",
                     "type": "Button",
                     "id": "0382e69a-410f-40d3-b665-375f045773f6",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SecondaryAttack",
+                    "type": "Button",
+                    "id": "974a22ab-eae5-4327-928e-726940a6978d",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -205,7 +214,18 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Impulse",
+                    "action": "Attack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "8c0cb342-f1f8-4106-877c-02a02c40cb9f",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SecondaryAttack",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
