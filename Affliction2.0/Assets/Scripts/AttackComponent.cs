@@ -1,7 +1,13 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+
+[System.Serializable]
+public class ComboContext
+{
+    public bool GroundRequired;
+    public bool WallRequired;
+}
 
 [System.Serializable]
 public class ComboAttack
@@ -10,9 +16,11 @@ public class ComboAttack
     public GameObject hitbox;
     public float damage;
     public float duration;
+    public float comboWindow = 0.5f; 
 
     public List<int> inputSequence;
-    public float inputWindow = 0.2f; 
+    public float inputWindow = 0.2f;
+    public ComboContext context;
 }
 
 public class AttackComponent : MonoBehaviour
@@ -21,19 +29,22 @@ public class AttackComponent : MonoBehaviour
 
     private List<int> inputBuffer = new List<int>();
     private float lastInputTime;
+
     private bool isAttacking = false;
+    private bool inComboWindow = false;
+    private Coroutine comboWindowCoroutine;
 
     private Player player;
 
     void Start()
     {
         player = GetComponent<Player>();
-        
     }
 
     void Update()
     {
-        if (inputBuffer.Count > 0 && Time.time - lastInputTime > GetMaxWindow())
+
+        if (inputBuffer.Count > 0 && !inComboWindow && Time.time - lastInputTime > GetMaxWindow())
         {
             inputBuffer.Clear();
         }
@@ -41,7 +52,8 @@ public class AttackComponent : MonoBehaviour
 
     public void RegisterInput(int inputType)
     {
-        if (isAttacking) return;
+
+        if (isAttacking && !inComboWindow) return;
 
         inputBuffer.Add(inputType);
         lastInputTime = Time.time;
@@ -51,21 +63,25 @@ public class AttackComponent : MonoBehaviour
 
     private void TryExecuteCombo()
     {
-
         ComboAttack bestMatch = null;
 
         foreach (var combo in combos)
         {
-            if (MatchesBuffer(combo.inputSequence))
-            {
-                if (bestMatch == null || combo.inputSequence.Count > bestMatch.inputSequence.Count)
-                    bestMatch = combo;
-            }
+            if (!MatchesBuffer(combo.inputSequence)) continue;
+            if (!MatchesContext(combo.context)) continue;
+
+            if (bestMatch == null || combo.inputSequence.Count > bestMatch.inputSequence.Count)
+                bestMatch = combo;
         }
 
         if (bestMatch != null)
         {
             inputBuffer.Clear();
+
+  
+            if (comboWindowCoroutine != null)
+                StopCoroutine(comboWindowCoroutine);
+
             StartCoroutine(ExecuteAttack(bestMatch));
         }
     }
@@ -82,6 +98,13 @@ public class AttackComponent : MonoBehaviour
         return true;
     }
 
+    private bool MatchesContext(ComboContext ctx)
+    {
+        if (ctx.GroundRequired && !player.IsGrounded()) return false;
+        if (ctx.WallRequired && !player.IsOnWall()) return false;
+        return true;
+    }
+
     private float GetMaxWindow()
     {
         float max = 0.2f;
@@ -93,11 +116,11 @@ public class AttackComponent : MonoBehaviour
     private IEnumerator ExecuteAttack(ComboAttack combo)
     {
         isAttacking = true;
-        Debug.Log($"Executing combo: {combo.name}");
+        inComboWindow = false;
+        Debug.Log($"Executing: {combo.name}");
 
         if (combo.hitbox != null)
         {
-
             Vector3 pos = combo.hitbox.transform.localPosition;
             pos.x = Mathf.Abs(pos.x) * (player.right ? 1f : -1f);
             combo.hitbox.transform.localPosition = pos;
@@ -112,5 +135,21 @@ public class AttackComponent : MonoBehaviour
         }
 
         isAttacking = false;
+
+      
+        comboWindowCoroutine = StartCoroutine(ComboWindowCoroutine(combo.comboWindow));
+    }
+
+    private IEnumerator ComboWindowCoroutine(float window)
+    {
+        inComboWindow = true;
+        Debug.Log($"Combo window ouverte ({window}s)");
+
+        yield return new WaitForSeconds(window);
+
+    
+        inComboWindow = false;
+        inputBuffer.Clear();
+        Debug.Log("Retour idle");
     }
 }

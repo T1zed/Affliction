@@ -39,7 +39,9 @@ public class Player : MonoBehaviour
     private AttackComponent attackComponent;
     private Rigidbody2D rb;
     private Vector2 moveInput;
-
+    [Header("context")]
+    public bool grounded;
+    public bool onWall;
     void Awake()
     {
         playerAction = new PlayerAction();
@@ -109,10 +111,14 @@ public class Player : MonoBehaviour
         }
     }
 
-    private bool IsGrounded()
+    public bool IsGrounded()
     {
-
         return Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+    }
+
+    public bool IsOnWall()
+    {
+        return IsTouchingWall(out _);
     }
 
     private bool IsTouchingWall(out Vector2 wallNormal)
