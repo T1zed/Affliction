@@ -36,6 +36,7 @@ public class Player : MonoBehaviour
     private bool isWallSliding = false;
     [SerializeField] private float wallSlideDelay = 2f;
     [SerializeField] private float wallSlideSpeed = 2f;
+    private ComboComponent comboComponent;
     private AttackComponent attackComponent;
     private Rigidbody2D rb;
     private Vector2 moveInput;
@@ -51,6 +52,7 @@ public class Player : MonoBehaviour
     {
 
         rb = GetComponent<Rigidbody2D>();
+        comboComponent = GetComponent<ComboComponent>();
         attackComponent = GetComponent<AttackComponent>();
 
     }
@@ -113,6 +115,7 @@ public class Player : MonoBehaviour
 
     public bool IsGrounded()
     {
+
         return Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
     }
 
@@ -154,12 +157,15 @@ public class Player : MonoBehaviour
     }
     public void OnAttack(InputAction.CallbackContext ctx)
     {
-        attackComponent?.RegisterInput(0);
+        attackComponent?.RegisterDirectInput(0);
+        comboComponent?.RegisterInput(0);
+        Debug.Log("atk");
     }
 
     public void OnSecondaryAttack(InputAction.CallbackContext ctx)
     {
-        attackComponent?.RegisterInput(1);
+        attackComponent?.RegisterDirectInput(1);
+        comboComponent?.RegisterInput(1);
     }
     IEnumerator DashCoroutine()
     {

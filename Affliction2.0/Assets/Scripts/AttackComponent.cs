@@ -10,95 +10,100 @@ public class ComboContext
 }
 
 [System.Serializable]
-public class ComboAttack
+public class AttackData
 {
-    public string name;
+    public string attackName;
     public GameObject hitbox;
     public float damage;
     public float duration;
-    public float comboWindow = 0.5f; 
-
-    public List<int> inputSequence;
-    public float inputWindow = 0.2f;
+    public float comboWindow = 0.5f;
     public ComboContext context;
+
+    [Header("Input direct (optionnel)")]
+    public bool hasDirectInput = false;
+    public List<int> directInputSequence; 
+    public float inputWindow = 0.2f;
 }
 
 public class AttackComponent : MonoBehaviour
 {
-    public List<ComboAttack> combos = new List<ComboAttack>();
+    public List<AttackData> attacks = new List<AttackData>();
+
+    private Dictionary<string, AttackData> attackDict;
+
+    public bool isAttacking = false;
+    public bool inComboWindow = false;
 
     private List<int> inputBuffer = new List<int>();
     private float lastInputTime;
-
-    private bool isAttacking = false;
-    private bool inComboWindow = false;
-    private Coroutine comboWindowCoroutine;
 
     private Player player;
 
     void Start()
     {
         player = GetComponent<Player>();
+
+        attackDict = new Dictionary<string, AttackData>();
+        foreach (var atk in attacks)
+            attackDict[atk.attackName] = atk;
     }
 
     void Update()
     {
-
         if (inputBuffer.Count > 0 && !inComboWindow && Time.time - lastInputTime > GetMaxWindow())
-        {
             inputBuffer.Clear();
-        }
     }
 
-    public void RegisterInput(int inputType)
+    public void RegisterDirectInput(int inputType)
     {
-
         if (isAttacking && !inComboWindow) return;
 
         inputBuffer.Add(inputType);
         lastInputTime = Time.time;
 
-        TryExecuteCombo();
+        TryDirectInput();
     }
 
-    private void TryExecuteCombo()
+    private void TryDirectInput()
     {
-        ComboAttack bestMatch = null;
+        AttackData bestMatch = null;
 
-        foreach (var combo in combos)
+        foreach (var atk in attacks)
         {
-            if (!MatchesBuffer(combo.inputSequence)) continue;
-            if (!MatchesContext(combo.context)) continue;
+            if (!atk.hasDirectInput) continue;
+            if (!MatchesBuffer(atk.directInputSequence, atk.inputWindow)) continue;
+            if (!MatchesContext(atk.context)) continue;
 
-            if (bestMatch == null || combo.inputSequence.Count > bestMatch.inputSequence.Count)
-                bestMatch = combo;
+            if (bestMatch == null || atk.directInputSequence.Count > bestMatch.directInputSequence.Count)
+                bestMatch = atk;
         }
 
         if (bestMatch != null)
         {
             inputBuffer.Clear();
-
-  
-            if (comboWindowCoroutine != null)
-                StopCoroutine(comboWindowCoroutine);
-
-            StartCoroutine(ExecuteAttack(bestMatch));
+            StartCoroutine(ExecuteAttack(bestMatch, () => { }));
         }
     }
 
-    private bool MatchesBuffer(List<int> sequence)
+    private bool MatchesBuffer(List<int> sequence, float window)
     {
+        if (sequence == null || sequence.Count == 0) return false;
         if (sequence.Count > inputBuffer.Count) return false;
 
         int offset = inputBuffer.Count - sequence.Count;
         for (int i = 0; i < sequence.Count; i++)
-        {
             if (inputBuffer[offset + i] != sequence[i]) return false;
-        }
+
         return true;
     }
 
-    private bool MatchesContext(ComboContext ctx)
+    public AttackData GetAttack(string name)
+    {
+        attackDict.TryGetValue(name, out var atk);
+        return atk;
+    }
+
+    public bool MatchesContext(ComboContext ctx)
     {
         if (ctx.GroundRequired && !player.IsGrounded()) return false;
         if (ctx.WallRequired && !player.IsOnWall()) return false;
@@ -108,48 +113,37 @@ public class AttackComponent : MonoBehaviour
     private float GetMaxWindow()
     {
         float max = 0.2f;
-        foreach (var combo in combos)
-            if (combo.inputWindow > max) max = combo.inputWindow;
+        foreach (var atk in attacks)
+            if (atk.hasDirectInput && atk.inputWindow > max) max = atk.inputWindow;
         return max;
     }
 
-    private IEnumerator ExecuteAttack(ComboAttack combo)
+    public IEnumerator ExecuteAttack(AttackData atk, System.Action onComboWindowEnd)
     {
         isAttacking = true;
         inComboWindow = false;
-        Debug.Log($"Executing: {combo.name}");
+        GetComponent<ComboComponent>()?.NotifyAttackStarted(atk.attackName);
+        Debug.Log($"Executing: {atk.attackName}");
 
-        if (combo.hitbox != null)
+        if (atk.hitbox != null)
         {
-            Vector3 pos = combo.hitbox.transform.localPosition;
+            Vector3 pos = atk.hitbox.transform.localPosition;
             pos.x = Mathf.Abs(pos.x) * (player.right ? 1f : -1f);
-            combo.hitbox.transform.localPosition = pos;
+            atk.hitbox.transform.localPosition = pos;
 
-            combo.hitbox.SetActive(true);
-            yield return new WaitForSeconds(combo.duration);
-            combo.hitbox.SetActive(false);
+            atk.hitbox.SetActive(true);
+            yield return new WaitForSeconds(atk.duration);
+            atk.hitbox.SetActive(false);
         }
         else
         {
-            yield return new WaitForSeconds(combo.duration);
+            yield return new WaitForSeconds(atk.duration);
         }
 
         isAttacking = false;
-
-      
-        comboWindowCoroutine = StartCoroutine(ComboWindowCoroutine(combo.comboWindow));
-    }
-
-    private IEnumerator ComboWindowCoroutine(float window)
-    {
         inComboWindow = true;
-        Debug.Log($"Combo window ouverte ({window}s)");
-
-        yield return new WaitForSeconds(window);
-
-    
+        yield return new WaitForSeconds(atk.comboWindow);
         inComboWindow = false;
-        inputBuffer.Clear();
-        Debug.Log("Retour idle");
+        onComboWindowEnd?.Invoke();
     }
 }
