@@ -30,6 +30,15 @@ public class ComboComponent : MonoBehaviour
     {
         currentAttack = attackName;
     }
+    public bool HasTransitionFor(int inputType)
+    {
+        foreach (var t in transitions)
+        {
+            if (t.fromAttack == currentAttack && t.input == inputType)
+                return true;
+        }
+        return false;
+    }
     public void RegisterInput(int inputType)
     {
         if (attackComponent.isAttacking && !attackComponent.inComboWindow) return;

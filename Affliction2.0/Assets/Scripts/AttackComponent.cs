@@ -61,6 +61,13 @@ public class AttackComponent : MonoBehaviour
         inputBuffer.Add(inputType);
         lastInputTime = Time.time;
 
+        var combo = GetComponent<ComboComponent>();
+        if (combo != null && combo.HasTransitionFor(inputType))
+        {
+            combo.RegisterInput(inputType);
+            return;
+        }
+
         TryDirectInput();
     }
 
