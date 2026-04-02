@@ -17,11 +17,12 @@ public class AttackData
     public float damage;
     public float duration;
     public float comboWindow = 0.5f;
+    public float hitboxLatency = 0f;
     public ComboContext context;
 
     [Header("Input direct (optionnel)")]
     public bool hasDirectInput = false;
-    public List<int> directInputSequence; 
+    public List<int> directInputSequence;
     public float inputWindow = 0.2f;
 }
 
@@ -130,6 +131,9 @@ public class AttackComponent : MonoBehaviour
         isAttacking = true;
         inComboWindow = false;
         GetComponent<ComboComponent>()?.NotifyAttackStarted(atk.attackName);
+
+        player.SetMovementLocked(true);
+
         Debug.Log($"Executing: {atk.attackName}");
 
         if (atk.hitbox != null)
@@ -137,6 +141,9 @@ public class AttackComponent : MonoBehaviour
             Vector3 pos = atk.hitbox.transform.localPosition;
             pos.x = Mathf.Abs(pos.x) * (player.right ? 1f : -1f);
             atk.hitbox.transform.localPosition = pos;
+
+            if (atk.hitboxLatency > 0f)
+                yield return new WaitForSeconds(atk.hitboxLatency);
 
             atk.hitbox.SetActive(true);
             yield return new WaitForSeconds(atk.duration);
@@ -146,6 +153,8 @@ public class AttackComponent : MonoBehaviour
         {
             yield return new WaitForSeconds(atk.duration);
         }
+
+        player.SetMovementLocked(false);
 
         isAttacking = false;
         inComboWindow = true;

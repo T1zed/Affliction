@@ -80,31 +80,61 @@ public class Player : MonoBehaviour
         AttackAction.performed -= OnAttack;
         SecondaryAttackAction.performed -= OnSecondaryAttack;
     }
+    private bool isMovementLocked = false;
+
+    public void SetMovementLocked(bool locked)
+    {
+        isMovementLocked = locked;
+        if (locked)
+        {
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        }
+        else
+        {
+
+            wasRight = false;
+            wasLeft = false;
+        }
+    }
+
+    private bool wasRight;
+    private bool wasLeft;
 
     void Update()
     {
         moveInput = moveAction.ReadValue<Vector2>();
 
-        if (moveInput.x > 0)
+        bool isPressingRight = moveInput.x > 0;
+        bool isPressingLeft = moveInput.x < 0;
+
+        if (!isMovementLocked)
         {
-            right = true;
-            transform.localScale = new Vector3(1f, transform.localScale.y, transform.localScale.z);
+            if (isPressingRight && !wasRight)
+            {
+                attackComponent?.RegisterDirectInput(3);
+                right = true;
+                transform.localScale = new Vector3(1f, transform.localScale.y, transform.localScale.z);
+            }
+            else if (isPressingLeft && !wasLeft)
+            {
+                attackComponent?.RegisterDirectInput(2);
+                right = false;
+                transform.localScale = new Vector3(-1f, transform.localScale.y, transform.localScale.z);
+            }
         }
-        else if (moveInput.x < 0)
-        {
-            right = false;
-            transform.localScale = new Vector3(-1f, transform.localScale.y, transform.localScale.z);
-        }
+
+        wasRight = isPressingRight;
+        wasLeft = isPressingLeft;
     }
+
 
     void FixedUpdate()
     {
         if (!isDashing)
         {
-
-            Vector2 velocity =  rb.linearVelocity ;
-            velocity.x = moveInput.x * moveSpeed;
-             rb.linearVelocity  = velocity;
+            Vector2 velocity = rb.linearVelocity;
+            velocity.x = isMovementLocked ? 0f : moveInput.x * moveSpeed; 
+            rb.linearVelocity = velocity;
         }
 
         if (!IsGrounded() && !isWallSliding && !isDashing && IsTouchingWall(out _))
@@ -159,7 +189,7 @@ public class Player : MonoBehaviour
     {
         attackComponent?.RegisterDirectInput(0);
         comboComponent?.RegisterInput(0);
-        Debug.Log("atk");
+
     }
 
     public void OnSecondaryAttack(InputAction.CallbackContext ctx)

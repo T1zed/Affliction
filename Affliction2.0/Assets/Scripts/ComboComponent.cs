@@ -20,7 +20,6 @@ public class ComboComponent : MonoBehaviour
 
     private string currentAttack = ""; 
     private Coroutine currentExecution;
-
     void Start()
     {
         attackComponent = GetComponent<AttackComponent>();
@@ -68,13 +67,7 @@ public class ComboComponent : MonoBehaviour
             StopCoroutine(currentExecution);
 
         string nextAttack = match.toAttack;
-        currentExecution = StartCoroutine(attackComponent.ExecuteAttack(atk, () => {
-               
-                currentAttack = "";
-                Debug.Log("Retour idle");
-            })
-        );
-
+        currentExecution = StartCoroutine(attackComponent.ExecuteAttack(atk, () => {currentAttack = "";Debug.Log("Retour idle");}));
         currentAttack = nextAttack;
     }
 }
