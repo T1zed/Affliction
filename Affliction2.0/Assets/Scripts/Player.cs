@@ -43,6 +43,9 @@ public class Player : MonoBehaviour
     [Header("context")]
     public bool grounded;
     public bool onWall;
+
+    [Header("animations")]
+    [SerializeField]private Animator animator;
     void Awake()
     {
         playerAction = new PlayerAction();
@@ -88,12 +91,13 @@ public class Player : MonoBehaviour
         if (locked)
         {
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            
         }
         else
         {
-
             wasRight = false;
             wasLeft = false;
+
         }
     }
 
@@ -106,6 +110,7 @@ public class Player : MonoBehaviour
 
         bool isPressingRight = moveInput.x > 0;
         bool isPressingLeft = moveInput.x < 0;
+        bool isMoving = isPressingRight || isPressingLeft;
 
         if (!isMovementLocked)
         {
@@ -121,6 +126,9 @@ public class Player : MonoBehaviour
                 right = false;
                 transform.localScale = new Vector3(-1f, transform.localScale.y, transform.localScale.z);
             }
+
+    
+            animator.SetBool("isRunning", isMoving);
         }
 
         wasRight = isPressingRight;
