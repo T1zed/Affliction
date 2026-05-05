@@ -1,10 +1,28 @@
 fileFormatVersion: 2
-guid: 9e835f9442747bd4db8f96a874845c6d
+guid: 51d22436487b74d43879f47435e2c81a
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1274967292748549190
-    second: running_0
+      213: -251752713524749249
+    second: spritesheetrun_0
+  - first:
+      213: -2402841716266377707
+    second: spritesheetrun_1
+  - first:
+      213: -8839882619376795766
+    second: spritesheetrun_2
+  - first:
+      213: 4993544625906052550
+    second: spritesheetrun_3
+  - first:
+      213: 1822364557588846139
+    second: spritesheetrun_4
+  - first:
+      213: -2840548224528982044
+    second: spritesheetrun_5
+  - first:
+      213: -2888456386100776902
+    second: spritesheetrun_6
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,155 +118,155 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: running_0
+      name: spritesheetrun_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 2000
-        height: 2000
+        x: 300
+        y: 1
+        width: 500
+        height: 499
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ab33b7790086e4ee0800000000000000
-      internalID: -1274967292748549190
+      spriteID: f3cdd1bad38918cf0800000000000000
+      internalID: -251752713524749249
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: running_1
+      name: spritesheetrun_1
       rect:
         serializedVersion: 2
-        x: 2000
-        y: 0
-        width: 2000
-        height: 2000
+        x: 800
+        y: 1
+        width: 500
+        height: 499
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 93de8c12e11520b4084fef16fd32de7f
-      internalID: 5951596
+      spriteID: 51ed37a903467aed0800000000000000
+      internalID: -2402841716266377707
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: running_2
+      name: spritesheetrun_2
       rect:
         serializedVersion: 2
-        x: 4000
-        y: 0
-        width: 2000
-        height: 2000
+        x: 1300
+        y: 1
+        width: 500
+        height: 499
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 6d8bee010734c9345a6585ab330db1f4
-      internalID: 1693704548
+      spriteID: a8f75e7e79d625580800000000000000
+      internalID: -8839882619376795766
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: running_3
+      name: spritesheetrun_3
       rect:
         serializedVersion: 2
-        x: 6000
-        y: 0
-        width: 2000
-        height: 2000
+        x: 1800
+        y: 1
+        width: 500
+        height: 499
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 049185d1fedde1c49b66b71c0c1e144b
-      internalID: 2031968722
+      spriteID: 6cde03d5162ac4540800000000000000
+      internalID: 4993544625906052550
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: running_4
+      name: spritesheetrun_4
       rect:
         serializedVersion: 2
-        x: 8000
-        y: 0
-        width: 2000
-        height: 2000
+        x: 2300
+        y: 1
+        width: 500
+        height: 499
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: eb0d7b899f34d4b44981efa0f0e76e88
-      internalID: 495607444
+      spriteID: b36585ae8e65a4910800000000000000
+      internalID: 1822364557588846139
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: running_5
+      name: spritesheetrun_5
       rect:
         serializedVersion: 2
-        x: 10000
-        y: 0
-        width: 2000
-        height: 2000
+        x: 2800
+        y: 1
+        width: 500
+        height: 499
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: a8d0df51d9bec3340a41fe8e4d820455
-      internalID: -395817533
+      spriteID: 4ef559d80785498d0800000000000000
+      internalID: -2840548224528982044
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: running_6
+      name: spritesheetrun_6
       rect:
         serializedVersion: 2
-        x: 12000
-        y: 0
-        width: 2000
-        height: 2000
+        x: 3300
+        y: 1
+        width: 500
+        height: 499
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 20227015c21004843a9a1fd45a770f0d
-      internalID: -179151524
+      spriteID: a30314578342ae7d0800000000000000
+      internalID: -2888456386100776902
       vertices: []
       indices: 
       edges: []
@@ -257,7 +275,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 0080f0e316502594196509415a6388b2
+    spriteID: 2b9b37208e664ff48b75b2da7cd1019a
     internalID: 0
     vertices: []
     indices: 
@@ -267,13 +285,13 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      running_0: -1274967292748549190
-      running_1: 5951596
-      running_2: 1693704548
-      running_3: 2031968722
-      running_4: 495607444
-      running_5: -395817533
-      running_6: -179151524
+      spritesheetrun_0: -251752713524749249
+      spritesheetrun_1: -2402841716266377707
+      spritesheetrun_2: -8839882619376795766
+      spritesheetrun_3: 4993544625906052550
+      spritesheetrun_4: 1822364557588846139
+      spritesheetrun_5: -2840548224528982044
+      spritesheetrun_6: -2888456386100776902
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

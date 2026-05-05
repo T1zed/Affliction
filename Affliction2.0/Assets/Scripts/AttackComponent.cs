@@ -114,7 +114,7 @@ public class AttackComponent : MonoBehaviour
     public bool MatchesContext(ComboContext ctx)
     {
         if (ctx.GroundRequired && !player.IsGrounded()) return false;
-        if (ctx.WallRequired && !player.IsOnWall()) return false;
+        if (ctx.WallRequired && !player.IsWalled()) return false;
         return true;
     }
 

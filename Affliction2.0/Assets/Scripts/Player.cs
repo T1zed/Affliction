@@ -32,10 +32,18 @@ public class Player : MonoBehaviour
     [Header("Wall")]
     [SerializeField] private LayerMask wallLayer;
     [SerializeField] private float wallCheckDistance = 0.6f;
+    [SerializeField] private GameObject wallCheck;
+    public bool isWallSliding = false;
 
-    private bool isWallSliding = false;
+    [Header("WallJump")]
+    private bool isWallJumping;
+    private float wallJumpDirection;
+    private float wallJumpTime=0.2f;
+    private float wallJumpingCounter;
+    private float wallJumpingDirection = 0.4f;
+    private Vector2 wallJumpingPower = new Vector2(4f, 5f);
     [SerializeField] private float wallSlideDelay = 2f;
-    [SerializeField] private float wallSlideSpeed = 2f;
+    [SerializeField] private float wallSlideSpeed = 0.5f;
     private ComboComponent comboComponent;
     private AttackComponent attackComponent;
     private Rigidbody2D rb;
@@ -69,7 +77,8 @@ public class Player : MonoBehaviour
         AttackAction=playerAction.Player.Attack;
         SecondaryAttackAction=playerAction.Player.SecondaryAttack;
 
-        jumpAction.performed += OnJump;
+        jumpAction.started += OnJumpStarted;
+        jumpAction.canceled += OnJumpCanceled;
         dashAction.performed += OnDash;
         AttackAction.performed += OnAttack;
         SecondaryAttackAction.performed += OnSecondaryAttack;
@@ -78,7 +87,8 @@ public class Player : MonoBehaviour
     private void OnDisable()
     {
         playerAction.Player.Disable();
-        jumpAction.performed -= OnJump;
+        jumpAction.started -= OnJumpStarted;
+        jumpAction.canceled -= OnJumpCanceled;
         dashAction.performed -= OnDash;
         AttackAction.performed -= OnAttack;
         SecondaryAttackAction.performed -= OnSecondaryAttack;
@@ -111,7 +121,8 @@ public class Player : MonoBehaviour
         bool isPressingRight = moveInput.x > 0;
         bool isPressingLeft = moveInput.x < 0;
         bool isMoving = isPressingRight || isPressingLeft;
-
+        WallSlide();
+        WallJump(); 
         if (!isMovementLocked)
         {
             if (isPressingRight && !wasRight)
@@ -134,52 +145,74 @@ public class Player : MonoBehaviour
         wasRight = isPressingRight;
         wasLeft = isPressingLeft;
     }
-
-
+    [SerializeField] float maxGravityScale = 5f;     
+    [SerializeField] float gravityAcceleration = 0.5f;
     void FixedUpdate()
     {
         if (!isDashing)
         {
             Vector2 velocity = rb.linearVelocity;
-            velocity.x = isMovementLocked ? 0f : moveInput.x * moveSpeed; 
+            velocity.x = isMovementLocked ? 0f : moveInput.x * moveSpeed;
             rb.linearVelocity = velocity;
         }
+   
+    }
+    public bool IsWalled()
+    {
+        return Physics2D.OverlapCircle(wallCheck.transform.position, 0.2f, wallLayer);
+    }
 
-        if (!IsGrounded() && !isWallSliding && !isDashing && IsTouchingWall(out _))
+    private void WallSlide()
+    {
+        if (IsWalled() && !grounded)
         {
-            StartCoroutine(WallSlideCoroutine());
+            isWallSliding = true;
+
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Clamp(rb.linearVelocity.y, -wallSlideSpeed, float.MaxValue));
+        }
+        else
+        {
+            isWallSliding = false;
         }
     }
 
+    private void WallJump()
+    {
+        if (isWallSliding == true)
+        {
+            isWallJumping = false;
+            wallJumpDirection = -transform.localScale.x;
+            wallJumpingCounter = wallJumpTime;
+            CancelInvoke(nameof(StopWallJumping));
+        }
+        else
+        {
+            wallJumpingCounter -=Time.deltaTime;
+        }
+        if(jumpPressed && wallJumpingCounter > 0f)
+        {
+            isWallJumping=true;
+            rb.linearVelocity =new Vector2(wallJumpDirection* wallJumpingPower.x,wallJumpingPower.y);
+            wallJumpingCounter = 0f;
+        }
+        if (isWallJumping && transform.localScale.x != wallJumpDirection)
+        {
+           right = !right;
+            Vector3 localscale =transform.localScale;
+            localscale.x *= -1;
+            transform.localScale = localscale;
+        }
+        Invoke(nameof(StopWallJumping), wallJumpTime);
+    }
+
+    private void StopWallJumping()
+    {
+        isWallJumping = false;
+    }
     public bool IsGrounded()
     {
 
         return Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-    }
-
-    public bool IsOnWall()
-    {
-        return IsTouchingWall(out _);
-    }
-
-    private bool IsTouchingWall(out Vector2 wallNormal)
-    {
-        RaycastHit2D hitRight = Physics2D.Raycast(transform.position, Vector2.right, wallCheckDistance, wallLayer);
-        if (hitRight.collider != null)
-        {
-            wallNormal = hitRight.normal;
-            return true;
-        }
-
-        RaycastHit2D hitLeft = Physics2D.Raycast(transform.position, Vector2.left, wallCheckDistance, wallLayer);
-        if (hitLeft.collider != null)
-        {
-            wallNormal = hitLeft.normal;
-            return true;
-        }
-
-        wallNormal = Vector2.zero;
-        return false;
     }
     private void OnDrawGizmosSelected()
     {
@@ -187,11 +220,22 @@ public class Player : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
     }
-    private void OnJump(InputAction.CallbackContext ctx)
+
+    private bool jumpPressed;
+
+    private void OnJumpStarted(InputAction.CallbackContext ctx)
     {
-        if (!IsGrounded()) return;
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
-        rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        jumpPressed = true;
+
+        if (IsGrounded())
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+    }
+
+    private void OnJumpCanceled(InputAction.CallbackContext ctx)
+    {
+        jumpPressed = false;
+        if (rb.linearVelocityY > 0f)
+            rb.linearVelocityY *= 0.9f;
     }
     public void OnAttack(InputAction.CallbackContext ctx)
     {
@@ -199,7 +243,6 @@ public class Player : MonoBehaviour
         comboComponent?.RegisterInput(0);
 
     }
-
     public void OnSecondaryAttack(InputAction.CallbackContext ctx)
     {
         attackComponent?.RegisterDirectInput(1);
@@ -229,40 +272,6 @@ public class Player : MonoBehaviour
         rb.gravityScale = 1f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Discrete;
         isDashing = false;
-    }
-
-    IEnumerator WallSlideCoroutine()
-    {
-        isWallSliding = true;
-        rb.gravityScale = 0f;
-         rb.linearVelocity  = Vector2.zero;
-
-        float timer = 0f;
-        while (timer < wallSlideDelay)
-        {
-            if (isDashing || IsGrounded() || !IsTouchingWall(out _))
-            {
-                ExitWallSlide();
-                yield break;
-            }
-            timer += Time.deltaTime;
-            yield return null;
-        }
-
-        rb.gravityScale = 0f;
-        while (IsTouchingWall(out _) && !IsGrounded())
-        {
-            if (isDashing || !IsTouchingWall(out _))
-            {
-                ExitWallSlide();
-                yield break;
-            }
-
-             rb.linearVelocity  = Vector2.down * wallSlideSpeed;
-            yield return new WaitForFixedUpdate();
-        }
-
-        ExitWallSlide();
     }
 
 
