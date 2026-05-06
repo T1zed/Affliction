@@ -13,6 +13,8 @@ public class CustomAttackFile : MonoBehaviour
         player = GetComponent<Player>();
 
         Register("Neutral_3", OnNeutral_3);
+        Register("Neutral_4", OnNeutral_4);
+        Register("Neutral_5", OnNeutral_5);
 
     }
 
@@ -63,4 +65,35 @@ public class CustomAttackFile : MonoBehaviour
         }
     }
 
+    private void OnNeutral_4(AttackData atk)
+    {
+        StartCoroutine(Dash(2f,0.15f, opposite: true));
+
+    }
+    private IEnumerator Dash(float length,float duration, bool opposite = false)
+    {
+        var rb = GetComponent<Rigidbody2D>();
+        player.isAttackDashing = true;
+
+        float direction = player.right ? 1f : -1f;
+        if (opposite) direction *= -1f;
+
+        float speed = length / duration;
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            rb.linearVelocity = new Vector2(direction * speed, rb.linearVelocity.y);
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        player.isAttackDashing = false; 
+    }
+
+    private void OnNeutral_5(AttackData atk)
+    {
+        StartCoroutine(Dash(3f,0.1f, opposite: false));
+    }
 }

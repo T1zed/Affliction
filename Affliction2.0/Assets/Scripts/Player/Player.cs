@@ -194,19 +194,20 @@ public class Player : MonoBehaviour
     }
     [SerializeField] float maxGravityScale = 5f;     
     [SerializeField] float gravityAcceleration = 0.5f;
+    public bool isAttackDashing = false;
+
     void FixedUpdate()
     {
         grounded = IsGrounded();
         if (grounded && rb.linearVelocityY <= 0f)
             isjumping = false;
-        if (!isDashing)
+
+        if (!isDashing && !isAttackDashing) 
         {
             Vector2 velocity = rb.linearVelocity;
             velocity.x = isMovementLocked ? 0f : moveInput.x * moveSpeed;
             rb.linearVelocity = velocity;
         }
-  
-
     }
     public bool IsWalled()
     {
