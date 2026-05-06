@@ -96,6 +96,8 @@ public class AttackComponent : MonoBehaviour
         inComboWindow = false;
         comboComponent?.NotifyAttackStarted(atk.attackName);
 
+        GetComponent<CustomAttackFile>()?.Execute(atk.attackName, atk);
+
         player.SetMovementLocked(true);
 
         Debug.Log($"Executing: {atk.attackName}");
