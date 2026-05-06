@@ -12,7 +12,7 @@ public class CustomAttackFile : MonoBehaviour
         attackComponent = GetComponent<AttackComponent>();
         player = GetComponent<Player>();
 
-        //Register("DownAir", OnDownAir);
+        Register("Neutral_3", OnNeutral_3);
 
     }
 
@@ -29,4 +29,38 @@ public class CustomAttackFile : MonoBehaviour
         if (behaviours.TryGetValue(attackName, out var b))
             b?.Invoke(atk);
     }
+
+    //custom
+
+    private void OnNeutral_3(AttackData atk)
+    {
+        StartCoroutine(TripleHit(atk));
+    }
+
+    private IEnumerator TripleHit(AttackData atk)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+      
+            GameObject hit = Instantiate(
+                atk.hitbox,
+                atk.hitbox.transform.position,
+                atk.hitbox.transform.rotation,
+                atk.hitbox.transform.parent
+            );
+
+        
+            Vector3 pos = hit.transform.localPosition;
+            pos.x = Mathf.Abs(pos.x) * (player.right ? 1f : -1f);
+            hit.transform.localPosition = pos;
+
+            hit.SetActive(true);
+            yield return new WaitForSeconds(0.2f); 
+            hit.SetActive(false);
+            Destroy(hit);
+
+            yield return new WaitForSeconds(0.05f); 
+        }
+    }
+
 }
