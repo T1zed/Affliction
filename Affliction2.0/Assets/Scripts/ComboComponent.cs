@@ -5,10 +5,10 @@ using System.Collections.Generic;
 [System.Serializable]
 public class ComboTransition
 {
-    public string fromAttack; 
-    public int input;           
+    public string fromAttack;
+    public AttackButton button;
+    public AttackDirection direction;
     public string toAttack;
-    public float inputWindow = 0.2f;
 }
 
 public class ComboComponent : MonoBehaviour
@@ -29,45 +29,33 @@ public class ComboComponent : MonoBehaviour
     {
         currentAttack = attackName;
     }
-    public bool HasTransitionFor(int inputType)
+    public bool HasTransitionFor(AttackInput input)
     {
         foreach (var t in transitions)
-        {
-            if (t.fromAttack == currentAttack && t.input == inputType)
+            if (t.fromAttack == currentAttack && t.button == input.button && t.direction == input.direction)
                 return true;
-        }
         return false;
     }
-    public void RegisterInput(int inputType)
+
+    public void RegisterInput(AttackInput input)
     {
         if (attackComponent.isAttacking && !attackComponent.inComboWindow) return;
 
         ComboTransition match = null;
         foreach (var t in transitions)
         {
-            if (t.fromAttack == currentAttack && t.input == inputType)
-            {
-                match = t;
-                break;
-            }
+            if (t.fromAttack == currentAttack && t.button == input.button && t.direction == input.direction)
+            { match = t; break; }
         }
 
         if (match == null) return;
 
         AttackData atk = attackComponent.GetAttack(match.toAttack);
-        if (atk == null)
-        {
-            Debug.LogWarning($"Attaque '{match.toAttack}' introuvable dans AttackComponent !");
-            return;
-        }
+        if (atk == null) return;
+        if (!attackComponent.MatchesContext(atk)) return;
 
-        if (!attackComponent.MatchesContext(atk.context)) return;
-
-        if (currentExecution != null)
-            StopCoroutine(currentExecution);
-
-        string nextAttack = match.toAttack;
-        currentExecution = StartCoroutine(attackComponent.ExecuteAttack(atk, () => {currentAttack = "";Debug.Log("Retour idle");}));
-        currentAttack = nextAttack;
+        if (currentExecution != null) StopCoroutine(currentExecution);
+        currentAttack = match.toAttack;
+        currentExecution = StartCoroutine(attackComponent.ExecuteAttack(atk, () => { currentAttack = ""; }));
     }
 }

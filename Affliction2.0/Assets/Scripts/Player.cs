@@ -2,16 +2,40 @@ using UnityEngine.InputSystem;
 using UnityEngine;
 using System.Collections;
 
+public enum PState
+{
+    IDLE,
+    RUNNING,
+    JUMPING,
+    LANDING,
+    DASHING,
+    WALLSLIDING,
+    GLIDING,
+    SLIDING,
+}
+
+public enum PAttacks
+{
+    NEUTRAL,
+    SIDE,
+    DOWN,
+    NEUTRALAIR,
+    SIDEAIR,
+    DOWNAIR,
+}
 public class Player : MonoBehaviour
 {
+
     private PlayerAction playerAction;
     private InputAction moveAction;
     private InputAction dashAction;
     private InputAction jumpAction;
     private InputAction AttackAction;
     private InputAction SecondaryAttackAction;
+    private InputAction DownAction;
     [Header("direction")]
     public bool right;
+    public PAttacks state;
     [Header("Movement")]
     public float moveSpeed = 5f;
     public float jumpForce = 5f;
@@ -51,6 +75,7 @@ public class Player : MonoBehaviour
     [Header("context")]
     public bool grounded;
     public bool onWall;
+    private bool isPressingDown = false;
 
     [Header("animations")]
     [SerializeField]private Animator animator;
@@ -75,6 +100,7 @@ public class Player : MonoBehaviour
         dashAction = playerAction.Player.Dash;
         jumpAction = playerAction.Player.Jump;
         AttackAction=playerAction.Player.Attack;
+        DownAction = playerAction.Player.Down;
         SecondaryAttackAction=playerAction.Player.SecondaryAttack;
 
         jumpAction.started += OnJumpStarted;
@@ -82,6 +108,8 @@ public class Player : MonoBehaviour
         dashAction.performed += OnDash;
         AttackAction.performed += OnAttack;
         SecondaryAttackAction.performed += OnSecondaryAttack;
+        DownAction.started += OnDown;
+        DownAction.canceled += OnDown;
     }
 
     private void OnDisable()
@@ -92,6 +120,8 @@ public class Player : MonoBehaviour
         dashAction.performed -= OnDash;
         AttackAction.performed -= OnAttack;
         SecondaryAttackAction.performed -= OnSecondaryAttack;
+        DownAction.started -= OnDown;
+        DownAction.canceled -= OnDown;
     }
     private bool isMovementLocked = false;
 
@@ -113,7 +143,23 @@ public class Player : MonoBehaviour
 
     private bool wasRight;
     private bool wasLeft;
+    private void StateShow(bool left, bool right)
+    {
+        if (grounded && isPressingDown)
+            state = PAttacks.DOWN;
+        else if (!grounded && isPressingDown)
+            state = PAttacks.DOWNAIR;
+        else if (grounded && (left || right))
+            state = PAttacks.SIDE;
+        else if (!grounded && (left || right))
+            state = PAttacks.SIDEAIR;
+        else if (!grounded)
+            state = PAttacks.NEUTRALAIR;
+        else
+            state = PAttacks.NEUTRAL;
 
+        Debug.Log(state);
+    }
     void Update()
     {
         moveInput = moveAction.ReadValue<Vector2>();
@@ -127,21 +173,22 @@ public class Player : MonoBehaviour
         {
             if (isPressingRight && !wasRight)
             {
-                attackComponent?.RegisterDirectInput(3);
                 right = true;
                 transform.localScale = new Vector3(1f, transform.localScale.y, transform.localScale.z);
+      
             }
             else if (isPressingLeft && !wasLeft)
             {
-                attackComponent?.RegisterDirectInput(2);
                 right = false;
                 transform.localScale = new Vector3(-1f, transform.localScale.y, transform.localScale.z);
+
             }
 
-    
+
             animator.SetBool("isRunning", isMoving);
         }
-
+        StateShow(isPressingLeft, isPressingRight);
+      
         wasRight = isPressingRight;
         wasLeft = isPressingLeft;
     }
@@ -254,16 +301,29 @@ public class Player : MonoBehaviour
 
      
     }
+    private void OnDown(InputAction.CallbackContext ctx)
+    {
+        if (ctx.started) isPressingDown = true;
+        else if (ctx.canceled) isPressingDown = false;
+    }
+
+    private AttackDirection GetAttackDirection()
+    {
+        if (isPressingDown) return AttackDirection.Down;
+        if (Mathf.Abs(moveInput.x) > 0.5f) return AttackDirection.Side;
+        return AttackDirection.Neutral;
+    }
+
     public void OnAttack(InputAction.CallbackContext ctx)
     {
-        attackComponent?.RegisterDirectInput(0);
-        comboComponent?.RegisterInput(0);
-
+        var dir = GetAttackDirection();
+        attackComponent?.RegisterDirectInput(AttackButton.Primary, dir);
     }
+
     public void OnSecondaryAttack(InputAction.CallbackContext ctx)
     {
-        attackComponent?.RegisterDirectInput(1);
-        comboComponent?.RegisterInput(1);
+        var dir = GetAttackDirection();
+        attackComponent?.RegisterDirectInput(AttackButton.Secondary, dir);
     }
     IEnumerator DashCoroutine()
     {

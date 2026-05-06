@@ -2,11 +2,13 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-[System.Serializable]
-public class ComboContext
+public enum AttackButton { Primary = 0, Secondary = 1 }
+public enum AttackDirection { Neutral = 0, Side = 1, Down = 2 }
+
+public struct AttackInput
 {
-    public bool GroundRequired;
-    public bool WallRequired;
+    public AttackButton button;
+    public AttackDirection direction;
 }
 
 [System.Serializable]
@@ -18,12 +20,14 @@ public class AttackData
     public float duration;
     public float comboWindow = 0.5f;
     public float hitboxLatency = 0f;
-    public ComboContext context;
 
-    [Header("Input direct (optionnel)")]
-    public bool hasDirectInput = false;
-    public List<int> directInputSequence;
-    public float inputWindow = 0.2f;
+    [Header("Déclenchement")]
+    public AttackButton button;
+    public AttackDirection direction;
+
+    [Header("Contexte")]
+    public bool groundOnly = false;
+    public bool airOnly = false;
 }
 
 public class AttackComponent : MonoBehaviour
@@ -31,78 +35,46 @@ public class AttackComponent : MonoBehaviour
     public List<AttackData> attacks = new List<AttackData>();
 
     private Dictionary<string, AttackData> attackDict;
+    private ComboComponent comboComponent;
+    private Player player;
 
     public bool isAttacking = false;
     public bool inComboWindow = false;
 
-    private List<int> inputBuffer = new List<int>();
-    private float lastInputTime;
-
-    private Player player;
-
     void Start()
     {
         player = GetComponent<Player>();
+        comboComponent = GetComponent<ComboComponent>();
 
         attackDict = new Dictionary<string, AttackData>();
         foreach (var atk in attacks)
             attackDict[atk.attackName] = atk;
     }
 
-    void Update()
-    {
-        if (inputBuffer.Count > 0 && !inComboWindow && Time.time - lastInputTime > GetMaxWindow())
-            inputBuffer.Clear();
-    }
-
-    public void RegisterDirectInput(int inputType)
+    public void RegisterDirectInput(AttackButton button, AttackDirection direction)
     {
         if (isAttacking && !inComboWindow) return;
 
-        inputBuffer.Add(inputType);
-        lastInputTime = Time.time;
+        var input = new AttackInput { button = button, direction = direction };
 
-        var combo = GetComponent<ComboComponent>();
-        if (combo != null && combo.HasTransitionFor(inputType))
+   
+        if (comboComponent != null && comboComponent.HasTransitionFor(input))
         {
-            combo.RegisterInput(inputType);
+            comboComponent.RegisterInput(input);
             return;
         }
 
-        TryDirectInput();
-    }
-
-    private void TryDirectInput()
-    {
-        AttackData bestMatch = null;
-
+        AttackData best = null;
         foreach (var atk in attacks)
         {
-            if (!atk.hasDirectInput) continue;
-            if (!MatchesBuffer(atk.directInputSequence, atk.inputWindow)) continue;
-            if (!MatchesContext(atk.context)) continue;
-
-            if (bestMatch == null || atk.directInputSequence.Count > bestMatch.directInputSequence.Count)
-                bestMatch = atk;
+            if (atk.button != button || atk.direction != direction) continue;
+            if (!MatchesContext(atk)) continue;
+            best = atk;
+            break;
         }
 
-        if (bestMatch != null)
-        {
-            inputBuffer.Clear();
-            StartCoroutine(ExecuteAttack(bestMatch, () => { }));
-        }
-    }
-
-    private bool MatchesBuffer(List<int> sequence, float window)
-    {
-        if (sequence == null || sequence.Count == 0) return false;
-        if (sequence.Count > inputBuffer.Count) return false;
-
-        int offset = inputBuffer.Count - sequence.Count;
-        for (int i = 0; i < sequence.Count; i++)
-            if (inputBuffer[offset + i] != sequence[i]) return false;
-
-        return true;
+        if (best != null)
+            StartCoroutine(ExecuteAttack(best, () => { }));
     }
 
     public AttackData GetAttack(string name)
@@ -111,26 +83,18 @@ public class AttackComponent : MonoBehaviour
         return atk;
     }
 
-    public bool MatchesContext(ComboContext ctx)
+    public bool MatchesContext(AttackData atk)
     {
-        if (ctx.GroundRequired && !player.IsGrounded()) return false;
-        if (ctx.WallRequired && !player.IsWalled()) return false;
+        if (atk.groundOnly && !player.IsGrounded()) return false;
+        if (atk.airOnly && player.IsGrounded()) return false;
         return true;
-    }
-
-    private float GetMaxWindow()
-    {
-        float max = 0.2f;
-        foreach (var atk in attacks)
-            if (atk.hasDirectInput && atk.inputWindow > max) max = atk.inputWindow;
-        return max;
     }
 
     public IEnumerator ExecuteAttack(AttackData atk, System.Action onComboWindowEnd)
     {
         isAttacking = true;
         inComboWindow = false;
-        GetComponent<ComboComponent>()?.NotifyAttackStarted(atk.attackName);
+        comboComponent?.NotifyAttackStarted(atk.attackName);
 
         player.SetMovementLocked(true);
 
