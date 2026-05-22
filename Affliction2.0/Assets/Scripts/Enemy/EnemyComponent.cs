@@ -43,11 +43,13 @@ public class EnemyComponent : MonoBehaviour
             if (trigger != null)
                 trigger.owner = this;
         }
+
     }
 
     void Update()
     {
         HandleSpotting();
+        Debug.Log(currentState);
     }
 
     void HandleSpotting()
@@ -63,7 +65,7 @@ public class EnemyComponent : MonoBehaviour
                 spotted = true;
                 currentState = Estate.ALERTED;
                 spottingTimer = 0f;
-                Debug.Log("alerted");
+               
             }
         }
         else

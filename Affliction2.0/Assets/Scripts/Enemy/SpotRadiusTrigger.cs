@@ -1,23 +1,21 @@
 using UnityEngine;
 
-// Ce script doit être attaché sur le GameObject "spotradius"
-// Le collider de cet objet doit être en mode "Is Trigger"
 public class SpotRadiusTrigger : MonoBehaviour
 {
     public EnemyComponent owner;
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter2D(Collider2D other)
     {
         if (owner == null) return;
 
         if (other.CompareTag("Player"))
         {
             owner.OnPlayerEnterSpotRadius();
+
         }
     }
 
-   
-    private void OnTriggerStay(Collider other)
+    private void OnTriggerStay2D(Collider2D other)
     {
         if (owner == null) return;
 
@@ -27,7 +25,7 @@ public class SpotRadiusTrigger : MonoBehaviour
         }
     }
 
-    private void OnTriggerExit(Collider other)
+    private void OnTriggerExit2D(Collider2D other)
     {
         if (owner == null) return;
 

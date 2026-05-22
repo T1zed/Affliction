@@ -158,7 +158,7 @@ public class Player : MonoBehaviour
         else
             state = PAttacks.NEUTRAL;
 
-        Debug.Log(state);
+       // Debug.Log(state);
     }
     void Update()
     {
