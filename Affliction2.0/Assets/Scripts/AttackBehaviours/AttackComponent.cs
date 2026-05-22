@@ -10,7 +10,21 @@ public struct AttackInput
     public AttackButton button;
     public AttackDirection direction;
 }
+[HideInInspector]public enum BumpType
+{
+    LIGHT,
+    MEDIUM,
+    HEAVY
+}
 
+[HideInInspector] public enum BumpDiection
+{
+    UP,
+    UPSIDE,
+    DOWNSIDE,
+    DOWN,
+    SIDE
+}
 [System.Serializable]
 public class AttackData
 {
@@ -20,6 +34,9 @@ public class AttackData
     public float duration;
     public float comboWindow = 0.5f;
     public float hitboxLatency = 0f;
+    public BumpType bump;
+    public BumpDiection Bdirection;
+
 
     [Header("Déclenchement")]
     public AttackButton button;
