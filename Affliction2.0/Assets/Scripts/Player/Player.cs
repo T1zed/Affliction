@@ -196,6 +196,7 @@ public class Player : MonoBehaviour
     [SerializeField] float gravityAcceleration = 0.5f;
     public bool isAttackDashing = false;
 
+
     void FixedUpdate()
     {
         grounded = IsGrounded();
@@ -310,8 +311,10 @@ public class Player : MonoBehaviour
 
     private AttackDirection GetAttackDirection()
     {
+        Vector2 currentMove = moveAction.ReadValue<Vector2>(); 
+
         if (isPressingDown) return AttackDirection.Down;
-        if (Mathf.Abs(moveInput.x) > 0.5f) return AttackDirection.Side;
+        if (Mathf.Abs(currentMove.x) > 0.5f) return AttackDirection.Side;
         return AttackDirection.Neutral;
     }
 
